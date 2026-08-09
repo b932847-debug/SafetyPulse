@@ -2,6 +2,7 @@
 
 An industrial-grade, IoT-connected fire alarm control panel simulator and environmental monitoring system built on the **ESP32**. This system implements official **NFPA 72 & ISO 8201 temporal audio alert signaling**, a **60 BPM (1 Hz) latched strobe visual engine**, direct HTTPS webhooks, dynamic captive Wi-Fi portal provisioning, and **Alexa / Arduino IoT Cloud integration** with custom color-coded alert routing.
 
+Go to safety-pulse-panel.base44.app/login and change urls after setting up VirtualSmartHome. Then click the edit URLs button and paste in your URLs.
 ---
 
 ## ✨ Features
