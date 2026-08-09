@@ -31,13 +31,13 @@ DHT dht(DHT_PIN, DHTTYPE);
 // ==========================
 // Alert Webhook URLs
 // ==========================
-const char* alertURL_Flame     = "https://www.virtualsmarthome.xyz/url_routine_trigger/activate.php?trigger=71b3a560-fcb7-4b26-8e6a-7a80d3e31481&token=e32f1eb2-88d0-44dd-a196-4672e37d2052&response=html";
-const char* alertURL_MQ7       = "https://www.virtualsmarthome.xyz/url_routine_trigger/activate.php?trigger=15ae597d-2ed0-48d4-b09b-41b128dce77f&token=1c6cfc22-60b0-4961-b2c3-533581ad50c5&response=html";
-const char* alertURL_MQ3       = "https://www.virtualsmarthome.xyz/url_routine_trigger/activate.php?trigger=4b03217a-a163-4a11-87c4-b21bd1770793&token=781fa5c4-6bb0-4b76-8976-0c9e0e74c3d5&response=html";
-const char* alertURL_MQ2       = "https://www.virtualsmarthome.xyz/url_routine_trigger/activate.php?trigger=975994d5-2dba-4aca-bc0b-451429d61ad8&token=5f905c50-5db8-4896-bcec-8bffbe59853f&response=html";
-const char* alertURL_HighHeat  = "https://www.virtualsmarthome.xyz/url_routine_trigger/activate.php?trigger=d1d89ad1-6deb-494e-8c88-9b0c150d337f&token=0c636f6b-6245-425c-b099-3b9553b2a857&response=html";
-const char* alertURL_LowFreeze = "https://www.virtualsmarthome.xyz/url_routine_trigger/activate.php?trigger=4f711e5a-36a6-4b59-9f1b-b35cff9034de&token=d827a700-d25c-47e5-9c52-afbe4633ecf6&response=html";
-const char* alertURL_Silence   = "https://www.virtualsmarthome.xyz/url_routine_trigger/activate.php?trigger=0ee7ec1d-0851-4928-bee4-6be0c0dd0ceb&token=162639b6-2b63-42dd-af61-e9b2da37c07a&response=html"; // Paste silence webhook if using one
+const char* alertURL_Flame   = "URL_HERE";
+const char* alertURL_MQ3      = "URL_HERE";
+const char* alertURL_MQ7      = "URL_HERE";
+const char* alertURL_MQ2      = "URL_HERE";
+const char* alertURL_HighHeat   = "URL_HERE";
+const char* alertURL_LowFreeze  = "URL_HERE";
+const char* alertURL_Silence   = "URL_HERE";
 
 // ==========================
 // Variables & Thresholds
