@@ -1,9 +1,9 @@
 /* 
   ESP32 Environmental & Fire Safety System with Arduino Cloud & WiFiManager
-  Features: 3 kHz NFPA Audio, 60 BPM Latched Strobe Engine, Dynamic WiFiManager, 
-            Audible Silence Latch, Commercial Panel Reset Tone
+  Features: 3.1 kHz NFPA Audio, 60 BPM Latched Strobe Engine, Dynamic WiFiManager, 
+            Audible Silence Latch, Commercial Panel Reset Tone, Audio-Synced LED (Pin 14)
   Sensors: IR Flame (Pin 27), MQ-3 (Pin 35), MQ-7 (Pin 32), MQ-2 (Pin 34), DHT22 (Pin 23)
-  Outputs: Piezo Audio (Pin 25), Latched Strobe Indicator Light (Pin 26)
+  Outputs: Piezo Audio (Pin 25), Latched Strobe Light (Pin 26), Sync LED (Pin 14)
 */
 
 #include <WiFi.h>
@@ -17,13 +17,14 @@
 // ==========================
 // Pin Definitions
 // ==========================
-const int FLAME_PIN  = 27;   // IR Flame Sensor Digital Output
-const int MQ3_PIN    = 35;   // MQ-3 Sensor Analog Output
-const int MQ7_PIN    = 32;   // MQ-7 Sensor Analog Output
-const int MQ2_PIN    = 34;   // MQ-2 Sensor Analog Output
-const int DHT_PIN    = 23;   // DHT22 Data Pin
-const int BUZZER_PIN = 25;   // Piezo Buzzer Pin (3 kHz NFPA Audio)
-const int LIGHT_PIN  = 26;   // Indicator Light Pin (60 BPM Latched Strobe)
+const int FLAME_PIN    = 27;   // IR Flame Sensor Digital Output
+const int MQ3_PIN      = 35;   // MQ-3 Sensor Analog Output
+const int MQ7_PIN      = 32;   // MQ-7 Sensor Analog Output
+const int MQ2_PIN      = 34;   // MQ-2 Sensor Analog Output
+const int DHT_PIN      = 23;   // DHT22 Data Pin
+const int BUZZER_PIN   = 25;   // Piezo Buzzer Pin (3.1 kHz NFPA Audio)
+const int LIGHT_PIN    = 26;   // Strobe Light Pin (60 BPM Latched Strobe)
+const int SYNC_LED_PIN = 14;   // Audio-Synced LED Pin (Pulses 1:1 with Buzzer)
 
 #define DHTTYPE DHT22
 DHT dht(DHT_PIN, DHTTYPE);
@@ -31,12 +32,12 @@ DHT dht(DHT_PIN, DHTTYPE);
 // ==========================
 // Alert Webhook URLs
 // ==========================
-const char* alertURL_Flame   = "URL_HERE";
-const char* alertURL_MQ3      = "URL_HERE";
-const char* alertURL_MQ7      = "URL_HERE";
-const char* alertURL_MQ2      = "URL_HERE";
-const char* alertURL_HighHeat   = "URL_HERE";
-const char* alertURL_LowFreeze  = "URL_HERE";
+const char* alertURL_Flame     = "URL_HERE";
+const char* alertURL_MQ3       = "URL_HERE";
+const char* alertURL_MQ7       = "URL_HERE";
+const char* alertURL_MQ2       = "URL_HERE";
+const char* alertURL_HighHeat  = "URL_HERE";
+const char* alertURL_LowFreeze = "URL_HERE";
 const char* alertURL_Silence   = "URL_HERE";
 
 // ==========================
@@ -54,7 +55,7 @@ const float FREEZE_LIMIT_F = 35.0;
 // ==========================
 // NFPA Standard Pitch Definition
 // ==========================
-const int NFPA_PITCH_HZ = 3100; // Standard 3 kHz evacuation pitch
+const int NFPA_PITCH_HZ = 3100; // Tuned 3.1 kHz evacuation pitch
 
 // ==========================
 // System State Latches
@@ -76,10 +77,12 @@ void playT3FireAlert();
 void playT4CoAlert();
 void playGasHazardAlert();
 void playSupervisoryAlert();
+void startAudio(int freq);
 void stopAudio();
 void silenceAudible();
 void resetSystem();
 void sendAlert(const char* url, const char* alertType);
+
 // ==========================
 // Live Serial Command Monitor
 // Type 'R' or 'r' anytime to wipe Wi-Fi and reboot to portal
@@ -98,6 +101,7 @@ void checkSerialCommands() {
     }
   }
 }
+
 // ==========================
 // 60 BPM Strobe Engine
 // ==========================
@@ -120,7 +124,7 @@ void smartDelay(unsigned long ms) {
   while (millis() - start < ms) {
     updateStrobe();
     ArduinoCloud.update();
-    checkSerialCommands(); // 👈 Checks for 'R' while waiting!
+    checkSerialCommands(); // Checks for 'R' while waiting
     if (audioSilenced) {
       stopAudio(); 
     }
@@ -131,9 +135,20 @@ void smartDelay(unsigned long ms) {
 // ==========================
 // Audio & Panel Handlers
 // ==========================
+
+// Audio Helper: Turns ON both Buzzer and Sync LED together
+void startAudio(int freq) {
+  if (!audioSilenced) {
+    digitalWrite(SYNC_LED_PIN, HIGH); // Light ON with tone
+    tone(BUZZER_PIN, freq);
+  }
+}
+
+// Audio Helper: Turns OFF both Buzzer and Sync LED together
 void stopAudio() {
   noTone(BUZZER_PIN);
   digitalWrite(BUZZER_PIN, LOW);
+  digitalWrite(SYNC_LED_PIN, LOW);   // Light OFF with silence
 }
 
 // Mutes audio while keeping strobes active & fires silence webhook
@@ -147,7 +162,7 @@ void silenceAudible() {
   }
 }
 
-// Panel Reset: Clears latches and plays 3-second 3 kHz panel tone
+// Panel Reset: Clears latches and plays panel tone
 void resetSystem() {
   Serial.println("🔄 SYSTEM RESET INITIATED...");
   
@@ -156,8 +171,8 @@ void resetSystem() {
   activeAlarmType = 0;
   digitalWrite(LIGHT_PIN, LOW);
 
-  // Play 3-second 3 kHz Fire Alarm Panel Reset Tone
-  tone(BUZZER_PIN, NFPA_PITCH_HZ);
+  // Play 2-second Fire Alarm Panel Reset Tone
+  startAudio(NFPA_PITCH_HZ);
   delay(2000); 
   stopAudio();
 
@@ -205,7 +220,7 @@ void sendAlert(const char* url, const char* alertType) {
 }
 
 // ==========================
-// NFPA Standard Sound Patterns (3 kHz)
+// NFPA Standard Sound Patterns (3.1 kHz)
 // ==========================
 
 // NFPA 72 Temporal 3 (T3) - Fire / Smoke / Heat / Flame
@@ -217,7 +232,7 @@ void playT3FireAlert() {
 
   for (int i = 0; i < 3; i++) {
     if (audioSilenced) break;
-    tone(BUZZER_PIN, NFPA_PITCH_HZ);
+    startAudio(NFPA_PITCH_HZ);
     smartDelay(500);
     stopAudio();
     smartDelay(500);
@@ -237,7 +252,7 @@ void playT4CoAlert() {
 
   for (int i = 0; i < 4; i++) {
     if (audioSilenced) break;
-    tone(BUZZER_PIN, NFPA_PITCH_HZ);
+    startAudio(NFPA_PITCH_HZ);
     smartDelay(100);
     stopAudio();
     smartDelay(100);
@@ -255,10 +270,9 @@ void playGasHazardAlert() {
 
   if (audioSilenced) return;
 
-  
-    tone(BUZZER_PIN, NFPA_PITCH_HZ);
-    smartDelay(240);
-    stopAudio();
+  startAudio(NFPA_PITCH_HZ);
+  smartDelay(240);
+  stopAudio();
     
   if (!audioSilenced) {
     smartDelay(125);
@@ -272,7 +286,7 @@ void playSupervisoryAlert() {
 
   if (audioSilenced) return;
 
-  tone(BUZZER_PIN, NFPA_PITCH_HZ);
+  startAudio(NFPA_PITCH_HZ);
   smartDelay(500);
   stopAudio();
 
@@ -298,18 +312,17 @@ void onAlarmLightChange() {
     if ((currentHue >= 0 && currentHue <= 15) || currentHue >= 345) {
       playT3FireAlert();      // Red = MQ-2 Smoke/Fire (T3)
     } else if (currentHue >= 50 && currentHue <= 70) {
-      playGasHazardAlert();  // Yellow = MQ-3 Gas/Vapors
+      playGasHazardAlert();   // Yellow = MQ-3 Gas/Vapors
     } else if (currentHue >= 20 && currentHue <= 40) {
       playT4CoAlert();        // Orange = MQ-7 CO (T4)
     } else if (currentHue >= 270 && currentHue <= 290) {
-      playSupervisoryAlert();    // Purple = Heat (T3)
+      playSupervisoryAlert(); // Purple = Heat
     } else if (currentHue >= 220 && currentHue <= 260) {
       playSupervisoryAlert(); // Blue = Freeze (Supervisory)
     } else if (currentHue >= 310 && currentHue <= 335) {
       playT3FireAlert();      // Pink = IR Flame (T3)
     } else if (currentHue >= 120 && currentHue <= 160) {
-      // Green = Silence Command via Alexa Color Selection
-      silenceAudible();
+      silenceAudible();       // Green = Silence Command
     } else {
       playT3FireAlert();      // Default fallback
     }
@@ -317,8 +330,7 @@ void onAlarmLightChange() {
     alarm_light.setSwitch(false);
     ArduinoCloud.update();
   } else {
-    // Turning switch OFF triggers full System Reset
-    resetSystem();
+    resetSystem();            // Turning switch OFF triggers full System Reset
   }
 }
 
@@ -332,6 +344,7 @@ void setup() {
   pinMode(FLAME_PIN, INPUT);
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(LIGHT_PIN, OUTPUT);
+  pinMode(SYNC_LED_PIN, OUTPUT); // Audio-Synced LED Pin
   
   // Clean initialization
   strobeLatched = false;
@@ -344,7 +357,6 @@ void setup() {
 
   // ==========================
   // WiFiManager Setup
-  // Spin up hotspot "ESP32_Safety_Portal" if no saved credentials exist
   // ==========================
   WiFiManager wm;
   Serial.println("Starting Wi-Fi Manager Portal...");
@@ -365,15 +377,13 @@ void setup() {
   setDebugMessageLevel(2);
   ArduinoCloud.printDebugInfo();
 
-  Serial.println("NFPA 3 kHz Commercial Safety Hub Active + WiFiManager Live.");
+  Serial.println("NFPA 3.1 kHz Commercial Safety Hub Active + WiFiManager Live.");
 }
 
 void loop() {
   ArduinoCloud.update();
   updateStrobe();
-  checkSerialCommands(); // 👈 Checks for 'R' on every loop pass!
-
-  // ... [keep the rest of your sensor reads and logic exact same] ...
+  checkSerialCommands(); // Checks for 'R' on every loop pass
 
   // Read Sensors
   int mq3Value   = analogRead(MQ3_PIN);
