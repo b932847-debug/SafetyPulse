@@ -1,6 +1,6 @@
-# 🚨 ESP32 Commercial-Grade Fire & Environmental Safety Hub
+# 🚨 ESP32 Demo-Grade Fire & Environmental Safety Hub
 
-An industrial-grade, IoT-connected fire alarm control panel simulator and environmental monitoring system built on the **ESP32**. This system implements official **NFPA 72 & ISO 8201 temporal audio alert signaling**, a **60 BPM (1 Hz) latched strobe visual engine**, direct HTTPS webhooks, dynamic captive Wi-Fi portal provisioning, and **Alexa / Arduino IoT Cloud integration** with custom color-coded alert routing.
+An demo-grade, IoT-connected fire alarm control panel simulator and environmental monitoring system built on the **ESP32**. This system implements official **NFPA 72 & ISO 8201 temporal audio alert signaling**, a **60 BPM (1 Hz) latched strobe visual engine**, direct HTTPS webhooks, dynamic captive Wi-Fi portal provisioning, and **Alexa / Arduino IoT Cloud integration** with custom color-coded alert routing.
 
 Go to 
 
