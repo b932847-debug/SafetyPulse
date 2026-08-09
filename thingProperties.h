@@ -7,8 +7,8 @@
 // ==========================
 // Secret Credentials & Device Identifiers
 // ==========================
-const char DEVICE_LOGIN_NAME[]  = "9fd39f4e-43fa-4728-915b-1a2885dc918d";       
-const char SECRET_DEVICE_KEY[]  = "WOGGA9!OSIIm!pUJUGdkBRbpy";      
+const char DEVICE_LOGIN_NAME[]  = "CODE_HERE";       
+const char SECRET_DEVICE_KEY[]  = "CODE_HERE";      
 
 // WiFiManager handles Wi-Fi dynamically, so leave these blank!
 const char SSID[]               = "";             
